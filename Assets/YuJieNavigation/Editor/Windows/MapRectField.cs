@@ -7,10 +7,10 @@ namespace YuJie.Navigation.Editors
 {
     public class MapRectField : VisualElement
     {
-        private IntegerField m_XField;
-        private IntegerField m_YField;
-        private IntegerField m_WidthField;
-        private IntegerField m_HeightField;
+        private IntegerField m_leftField;
+        private IntegerField m_rightField;
+        private IntegerField m_topField;
+        private IntegerField m_bottomField;
 
         private RectInt m_Value;
         public RectInt value
@@ -35,19 +35,17 @@ namespace YuJie.Navigation.Editors
             var fieldsContainer = new VisualElement { name = "rect-int-fields" };
             fieldsContainer.AddToClassList("fields-container");
 
-            // 创建坐标字段
-            m_XField = CreateIntegerField("左边界:", 0, "x-field");
-            m_YField = CreateIntegerField("地边界:", 0, "y-field");
-
-            // 创建尺寸字段
-            m_WidthField = CreateIntegerField("地图宽:", 0, "width-field");
-            m_HeightField = CreateIntegerField("地图高:", 0, "height-field");
+            // 创建字段
+            m_leftField = CreateIntegerField("左边界:", 0, "x-field");
+            m_rightField = CreateIntegerField("右边界:", 0, "y-field");
+            m_topField = CreateIntegerField("上边界:", 0, "width-field");
+            m_bottomField = CreateIntegerField("下边界:", 0, "height-field");
 
             // 添加到容器
-            fieldsContainer.Add(m_XField);
-            fieldsContainer.Add(m_YField);
-            fieldsContainer.Add(m_WidthField);
-            fieldsContainer.Add(m_HeightField);
+            fieldsContainer.Add(m_leftField);
+            fieldsContainer.Add(m_rightField);
+            fieldsContainer.Add(m_topField);
+            fieldsContainer.Add(m_bottomField);
 
             Add(fieldsContainer);
 
@@ -62,10 +60,10 @@ namespace YuJie.Navigation.Editors
 
         public new class UxmlTraits : VisualElement.UxmlTraits
         {
-            private readonly UxmlIntAttributeDescription m_XAttr = new UxmlIntAttributeDescription { name = "左边界", defaultValue = 0 };
-            private readonly UxmlIntAttributeDescription m_YAttr = new UxmlIntAttributeDescription { name = "底边界", defaultValue = 0 };
-            private readonly UxmlIntAttributeDescription m_WidthAttr = new UxmlIntAttributeDescription { name = "宽度", defaultValue = 0 };
-            private readonly UxmlIntAttributeDescription m_HeightAttr = new UxmlIntAttributeDescription { name = "高度", defaultValue = 0 };
+            private readonly UxmlIntAttributeDescription m_leftAttr = new UxmlIntAttributeDescription { name = "左边界", defaultValue = 0 };
+            private readonly UxmlIntAttributeDescription m_rightAttr = new UxmlIntAttributeDescription { name = "右边界", defaultValue = 0 };
+            private readonly UxmlIntAttributeDescription m_topAttr = new UxmlIntAttributeDescription { name = "上边界", defaultValue = 0 };
+            private readonly UxmlIntAttributeDescription m_bottomAttr = new UxmlIntAttributeDescription { name = "下边界", defaultValue = 0 };
 
             public override void Init(VisualElement ve, IUxmlAttributes bag, CreationContext cc)
             {
@@ -75,10 +73,10 @@ namespace YuJie.Navigation.Editors
                     return;
 
                 field.value = new RectInt(
-                    m_XAttr.GetValueFromBag(bag, cc),
-                    m_YAttr.GetValueFromBag(bag, cc),
-                    m_WidthAttr.GetValueFromBag(bag, cc),
-                    m_HeightAttr.GetValueFromBag(bag, cc)
+                    m_leftAttr.GetValueFromBag(bag, cc),
+                    m_rightAttr.GetValueFromBag(bag, cc),
+                    m_topAttr.GetValueFromBag(bag, cc),
+                    m_bottomAttr.GetValueFromBag(bag, cc)
                 );
 
             }
@@ -97,29 +95,29 @@ namespace YuJie.Navigation.Editors
         // 注册字段变更回调
         private void RegisterFieldCallbacks()
         {
-            m_XField.RegisterValueChangedCallback(e => UpdateRectFromFields());
-            m_YField.RegisterValueChangedCallback(e => UpdateRectFromFields());
-            m_WidthField.RegisterValueChangedCallback(e => UpdateRectFromFields());
-            m_HeightField.RegisterValueChangedCallback(e => UpdateRectFromFields());
+            m_leftField.RegisterValueChangedCallback(e => UpdateRectFromFields());
+            m_rightField.RegisterValueChangedCallback(e => UpdateRectFromFields());
+            m_topField.RegisterValueChangedCallback(e => UpdateRectFromFields());
+            m_bottomField.RegisterValueChangedCallback(e => UpdateRectFromFields());
         }
 
         // 更新字段值显示
         private void UpdateFieldValues()
         {
-            m_XField.SetValueWithoutNotify(value.x);
-            m_YField.SetValueWithoutNotify(value.y);
-            m_WidthField.SetValueWithoutNotify(value.width);
-            m_HeightField.SetValueWithoutNotify(value.height);
+            m_leftField.SetValueWithoutNotify(value.x);
+            m_rightField.SetValueWithoutNotify(value.y);
+            m_topField.SetValueWithoutNotify(value.width);
+            m_bottomField.SetValueWithoutNotify(value.height);
         }
 
         // 根据字段更新Rect值
         private void UpdateRectFromFields()
         {
             value = new RectInt(
-                m_XField.value,
-                m_YField.value,
-                Mathf.Max(0, m_WidthField.value),
-                Mathf.Max(0, m_HeightField.value)
+                m_leftField.value,
+                m_rightField.value,
+                m_topField.value,
+                m_bottomField.value
             );
         }
     }

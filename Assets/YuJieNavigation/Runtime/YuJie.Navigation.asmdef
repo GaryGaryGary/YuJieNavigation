@@ -1,12 +1,8 @@
 {
-    "name": "YuJie.Navigation.Editor",
-    "rootNamespace": "YuJie.Navigation.Editors",
-    "references": [
-        "GUID:69602e5770d046d438264cfdb81f4fe5"
-    ],
-    "includePlatforms": [
-        "Editor"
-    ],
+    "name": "YuJie.Navigation",
+    "rootNamespace": "YuJie.Navigation",
+    "references": [],
+    "includePlatforms": [],
     "excludePlatforms": [],
     "allowUnsafeCode": false,
     "overrideReferences": false,
