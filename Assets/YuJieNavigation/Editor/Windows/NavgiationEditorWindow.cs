@@ -7,6 +7,11 @@ using UnityEngine.UIElements;
 
 namespace YuJie.Navigation.Editors
 {
+    /// <summary>
+    /// TODO 
+    /// 改为float
+    /// layermask
+    /// </summary>
     public class NavgiationEditorWindow : EditorWindow
     {
         [SerializeField]
@@ -39,12 +44,16 @@ namespace YuJie.Navigation.Editors
         }
 
         #region 监听
+
         //生成
         private void OnGenerateBtnClick()
-        {//TODO 进度条
-            var bounds = FindObstacleRenderersInScene();
-            return;
-            RefreshMapGrid();
+        {
+            bool succ = RefreshMapGrid();
+            if (succ)
+                succ = RefreshMapPlane();
+
+            EditorUtility.ClearProgressBar();
+            EditorUtility.DisplayDialog("", succ ? "数据生成成功" : "数据生成失败", "确认");
         }
 
         private void OnMapRectChanged(RectInt rect)
@@ -60,6 +69,8 @@ namespace YuJie.Navigation.Editors
                 GameObject.DestroyImmediate(m_gridDrawer.gameObject);
             if (m_borderDrawer != null)
                 GameObject.DestroyImmediate(m_borderDrawer.gameObject);
+            if (m_planeDrawer != null)
+                GameObject.DestroyImmediate(m_planeDrawer.gameObject);
 
             ResetSceneView();
         }
@@ -67,6 +78,8 @@ namespace YuJie.Navigation.Editors
         #region 地图网格
         private GridGizmoDrawer m_gridDrawer;
         private BorderGizmoDrawer m_borderDrawer;
+        private PlaneGizmoDrawer m_planeDrawer;
+
 
         private void SetMapDrawer()
         {
@@ -77,23 +90,15 @@ namespace YuJie.Navigation.Editors
             GameObject BorderContainer = new GameObject("BorderContainer");
             m_borderDrawer = BorderContainer.AddComponent<BorderGizmoDrawer>();
             m_borderDrawer.size = Vector2.zero;
+
+            GameObject PlaneContainer = new GameObject("PlaneContainer");
+            m_planeDrawer = PlaneContainer.AddComponent<PlaneGizmoDrawer>();
+            m_planeDrawer.size = Vector2.zero;
         }
 
-        private void RefreshMapGrid()
-        {
-            RectInt rect = m_mapRectField.value;
-            float gridwidth = m_gridWidthField.value * 1.0f;
-            //横竖网格数量
-            int xDivisions = (int)Mathf.Ceil((rect.y - rect.x) / gridwidth);
-            int yDivisions = (int)Mathf.Ceil((rect.width - rect.height) / gridwidth);
-
-            m_gridDrawer.gridDivisions = new Vector2Int(xDivisions,yDivisions);
-            m_gridDrawer.size = new Vector2(m_gridWidthField.value * xDivisions, m_gridWidthField.value * yDivisions);
-
-            m_gridDrawer.position = new Vector3((rect.x + rect.y) / 2.0f, 1, (rect.width + rect.height) / 2.0f);
-            SceneView.lastActiveSceneView.Repaint();
-        }
-
+        /// <summary>
+        /// 更新地图边框
+        /// </summary>
         private void RefreshMapBorder()
         {
             RectInt rect = m_mapRectField.value;
@@ -105,6 +110,57 @@ namespace YuJie.Navigation.Editors
             m_borderDrawer.position = new Vector3((rect.x + rect.y) / 2.0f, 2, (rect.width + rect.height) / 2.0f);
 
             SceneView.lastActiveSceneView.Repaint();
+        }
+
+
+        /// <summary>
+        /// 更新网格
+        /// </summary>
+        private bool RefreshMapGrid()
+        {
+            if (EditorUtility.DisplayCancelableProgressBar("地图导航数据生成....", $"网格生成中...", 0.2f))
+            {//取消
+                if (m_gridDrawer)
+                    m_gridDrawer.size = Vector2.zero;
+                return false;
+            }
+
+            RectInt rect = m_mapRectField.value;
+            float gridwidth = m_gridWidthField.value * 1.0f;
+            //横竖网格数量
+            int xDivisions = (int)Mathf.Ceil((rect.y - rect.x) / gridwidth);
+            int yDivisions = (int)Mathf.Ceil((rect.width - rect.height) / gridwidth);
+
+            m_gridDrawer.gridDivisions = new Vector2Int(xDivisions, yDivisions);
+            m_gridDrawer.size = new Vector2(m_gridWidthField.value * xDivisions, m_gridWidthField.value * yDivisions);
+
+            m_gridDrawer.position = new Vector3((rect.x + rect.y) / 2.0f, 1, (rect.width + rect.height) / 2.0f);
+            SceneView.lastActiveSceneView.Repaint();
+            return true;
+        }
+
+        /// <summary>
+        /// 更新地图网格面
+        /// </summary>
+        private bool RefreshMapPlane()
+        {
+            var bounds = FindObstacleRenderersInScene();
+            int obsCount = bounds.Count;
+            int gridCount = 0;
+            int checkCount = 0;
+            for (int i = 0; i < gridCount; i++)
+            {
+                bool cancelled = EditorUtility.DisplayCancelableProgressBar("地图导航数据生成....",
+                    $"数据生成中...({checkCount}/{gridCount})",
+                    (float)checkCount / gridCount);
+                if (cancelled)
+                {
+                    if (m_planeDrawer)
+                        m_planeDrawer.size = Vector2.zero;
+                    return false;
+                }
+            }
+            return true;
         }
         #endregion 地图网格
 
@@ -119,7 +175,7 @@ namespace YuJie.Navigation.Editors
                 sceneView = SceneView.GetWindow<SceneView>();
             }
             sceneView.Focus();
-            
+
             sceneView.rotation = Quaternion.Euler(90f, 0f, 0f);
             sceneView.LookAt(Vector3.zero);
             m_originalProj = sceneView.orthographic;
