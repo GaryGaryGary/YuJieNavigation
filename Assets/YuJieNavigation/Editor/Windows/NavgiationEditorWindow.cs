@@ -54,7 +54,8 @@ namespace YuJie.Navigation.Editors
             bool succ = RefreshMapGrid(0.2f);
             if (succ)
                 succ = RefreshGridData(0.5f);
-
+            if (succ)
+                succ = RefreshMapPlane(0.8f);
             EditorUtility.ClearProgressBar();
             EditorUtility.DisplayDialog("", succ ? "数据生成成功" : "数据生成失败", "确认");
         }
@@ -119,15 +120,15 @@ namespace YuJie.Navigation.Editors
         {
             GameObject GridContainer = new GameObject("GridContainer");
             m_gridDrawer = GridContainer.AddComponent<GridGizmoDrawer>();
-            m_gridDrawer.size = Vector2.zero;
+            m_gridDrawer.Clear();
 
             GameObject BorderContainer = new GameObject("BorderContainer");
             m_borderDrawer = BorderContainer.AddComponent<BorderGizmoDrawer>();
-            m_borderDrawer.size = Vector2.zero;
+            m_borderDrawer.Clear();
 
             GameObject PlaneContainer = new GameObject("PlaneContainer");
             m_planeDrawer = PlaneContainer.AddComponent<PlaneGizmoDrawer>();
-            m_planeDrawer.size = Vector2.zero;
+            m_planeDrawer.Clear();
         }
 
         /// <summary>
@@ -139,9 +140,11 @@ namespace YuJie.Navigation.Editors
             //横竖网格数量
             int xDivisions = Mathf.CeilToInt((rect.y - rect.x) / m_gridWidthField.value);
             int yDivisions = Mathf.CeilToInt((rect.width - rect.height) / m_gridWidthField.value);
-            m_borderDrawer.size = new Vector2(m_gridWidthField.value * xDivisions, m_gridWidthField.value * yDivisions);
-            m_borderDrawer.position = new Vector3((rect.x + rect.y) / 2.0f, 2, (rect.width + rect.height) / 2.0f);
 
+            var pos = new Vector3((rect.x + rect.y) / 2.0f, 2, (rect.width + rect.height) / 2.0f);
+            m_borderDrawer.SetBorder(pos,
+                m_gridWidthField.value * xDivisions,
+                m_gridWidthField.value * yDivisions);
             SceneView.lastActiveSceneView.Repaint();
         }
 
@@ -154,7 +157,7 @@ namespace YuJie.Navigation.Editors
             if (EditorUtility.DisplayCancelableProgressBar("地图导航数据生成....", $"网格生成中...", progress))
             {//取消
                 if (m_gridDrawer)
-                    m_gridDrawer.size = Vector2.zero;
+                    m_gridDrawer.Clear();
                 return false;
             }
             try
@@ -164,31 +167,19 @@ namespace YuJie.Navigation.Editors
                 int xDivisions = Mathf.CeilToInt((rect.y - rect.x) / m_gridWidthField.value);
                 int yDivisions = Mathf.CeilToInt((rect.width - rect.height) / m_gridWidthField.value);
 
-                m_gridDrawer.gridDivisions = new Vector2Int(xDivisions, yDivisions);
-                m_gridDrawer.size = new Vector2(m_gridWidthField.value * xDivisions, m_gridWidthField.value * yDivisions);
+                var div = new Vector2Int(xDivisions, yDivisions);
+                var size = new Vector2(m_gridWidthField.value * xDivisions, m_gridWidthField.value * yDivisions);
 
-                m_gridDrawer.position = new Vector3((rect.x + rect.y) / 2.0f, 1, (rect.width + rect.height) / 2.0f);
+                var pos = new Vector3((rect.x + rect.y) / 2.0f, 1, (rect.width + rect.height) / 2.0f);
+                m_gridDrawer.SetGrid(pos, size.x, size.y,div);
                 SceneView.lastActiveSceneView.Repaint();
             }
             catch (Exception)
             {
-
+                if (m_gridDrawer)
+                    m_gridDrawer.Clear();
+                EditorUtility.ClearProgressBar();
                 throw;
-            }
-            return true;
-        }
-
-        /// <summary>
-        /// 更新地图网格面
-        /// </summary>
-        private bool RefreshMapPlane(float progress)
-        {
-            bool cancelled = EditorUtility.DisplayCancelableProgressBar("地图导航数据生成....", $"网格表面生成中...", progress);
-            if (cancelled)
-            {
-                if (m_planeDrawer)
-                    m_planeDrawer.size = Vector2.zero;
-                return false;
             }
             return true;
         }
@@ -237,12 +228,12 @@ namespace YuJie.Navigation.Editors
         /// <summary>
         /// 障碍物网格
         /// </summary>
-        private Node[] m_obsNodes;
+        private List<Vector3> m_obsNodes;
 
         /// <summary>
         /// 可通行网格
         /// </summary>
-        private Node[] m_walkableNodes;
+        private List<Vector3> m_walkableNodes;
 
         /// <summary>
         /// 障碍物形成的包围边界
@@ -260,6 +251,8 @@ namespace YuJie.Navigation.Editors
                 if (m_obsRects != null)
                     m_obsRects.Clear();
                 m_obsGrid = null;
+                m_walkableNodes = null;
+                m_obsNodes = null;
                 return false;
             }
 
@@ -270,6 +263,11 @@ namespace YuJie.Navigation.Editors
             }
             catch (Exception)
             {
+                if (m_obsRects != null)
+                    m_obsRects.Clear();
+                m_obsGrid = null;
+                m_walkableNodes = null;
+                m_obsNodes = null;
                 EditorUtility.ClearProgressBar();
                 throw;
             }
@@ -283,6 +281,9 @@ namespace YuJie.Navigation.Editors
             RectInt rect = m_mapRectField.value;
             int xDivisions = Mathf.CeilToInt((rect.y - rect.x) / gridW);
             int yDivisions = Mathf.CeilToInt((rect.width - rect.height) / gridW);
+            m_obsNodes = new List<Vector3>(xDivisions*yDivisions / 2);
+            m_walkableNodes = new List<Vector3>(xDivisions*yDivisions / 2);
+
             Vector2 center = new Vector2((rect.x + rect.y) / 2.0f, (rect.width + rect.height) / 2.0f);
             m_obsGrid = new bool[xDivisions, yDivisions];
 
@@ -296,7 +297,12 @@ namespace YuJie.Navigation.Editors
                 {
                     checkRect.x = lbPos.x + gridW * x;
                     checkRect.y = lbPos.y + gridW * y;
-                    m_obsGrid[x, y] = CheckRectOverlap(checkRect);
+                    bool isObs = CheckRectOverlap(checkRect);
+                    m_obsGrid[x, y] = isObs;
+                    if (isObs)
+                        m_obsNodes.Add(new Vector3(rect.center.x,0, rect.center.y));
+                    else
+                        m_walkableNodes.Add(new Vector3(rect.center.x, 0, rect.center.y));
                 }
             }
         }
@@ -367,5 +373,38 @@ namespace YuJie.Navigation.Editors
                 .ToArray();
         }
         #endregion 网格数据处理
+
+
+        #region 网格障碍显示
+
+        /// <summary>
+        /// 更新地图网格面
+        /// </summary>
+        private bool RefreshMapPlane(float progress)
+        {
+            bool cancelled = EditorUtility.DisplayCancelableProgressBar("地图导航数据生成....", $"网格表面生成中...", progress);
+            if (cancelled)
+            {
+                if (m_planeDrawer)
+                    m_planeDrawer.Clear();
+                return false;
+            }
+
+            try
+            {
+
+            }
+            catch (Exception)
+            {
+                if (m_planeDrawer)
+                    m_planeDrawer.Clear();
+                EditorUtility.ClearProgressBar();
+                throw;
+            }
+
+            return true;
+        }
+
+        #endregion 网格障碍显示
     }
 }

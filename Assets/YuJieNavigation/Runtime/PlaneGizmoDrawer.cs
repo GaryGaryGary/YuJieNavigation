@@ -1,4 +1,5 @@
 #if UNITY_EDITOR
+using System.Collections.Generic;
 using UnityEngine;
 
 namespace YuJie.Navigation.Editors
@@ -9,64 +10,77 @@ namespace YuJie.Navigation.Editors
     [ExecuteInEditMode]
     public class PlaneGizmoDrawer : MonoBehaviour
     {
-        public Vector3 position = Vector3.zero;
-        [Tooltip("平面尺寸 (宽度, 高度)")]
-        public Vector2 size = new Vector2(5, 5);
-        [Tooltip("网格细分数量 (X, Y)")]
-        public Vector2Int gridDivisions = new Vector2Int(5, 5);
+        private Color m_objColor = new Color(1f, 0f, 0f, 0.5f);
+        private bool m_alwaysVisible = true;
+        private Vector3 m_normal = Vector3.up;
+        private bool m_drawObsPlane, m_drawWalkablesPlane;
+        private Quaternion m_rot;
+        private List<Vector3> m_obsCenters;
 
-        [Header("可视化选项")]
-        [Tooltip("平面表面颜色")]
-        public Color faceColor = new Color(0.3f, 0.8f, 0.5f, 0.25f);
+        private Vector3 m_gridSize = Vector3.one;
+        private Vector3 m_center;
 
-        [Tooltip("始终绘制 (在非选中状态下也可见)")]
-        public bool alwaysVisible = true;
+        private void Awake()
+        {
+            m_rot = GetPlaneRotation();
+        }
 
-        private Vector3 normal = Vector3.up;
+        public void SetObsData(List<Vector3> vectors,Vector3 position, float width)
+        {
+            if (vectors == null)
+                return;
+            m_gridSize = new Vector3(width, 0, width);
+            m_obsCenters = vectors;
+            m_center = transform.position + position;
+            m_drawObsPlane = true;
+        }
+
+        public void Clear()
+        {
+            m_obsCenters = null;
+            m_drawObsPlane = m_drawWalkablesPlane = false;
+        }
 
         private void OnDrawGizmos()
         {
-            if (alwaysVisible)
+            if (m_alwaysVisible)
             {
-                DrawPlane();
+                DrawObsPlane();
             }
         }
 
         private void OnDrawGizmosSelected()
         {
-            if (!alwaysVisible)
+            if (!m_alwaysVisible)
             {
-                DrawPlane();
+                DrawObsPlane();
             }
         }
 
-        private void DrawPlane()
+        private void DrawObsPlane()
         {
-            if (Vector2.Equals(size,Vector2.zero))
+            if (!m_drawObsPlane)
                 return;
-            // 计算坐标系
-            Quaternion rotation = GetPlaneRotation();
-            Vector3 center = transform.position + position;
-
-            // 设置平面坐标系
-            Gizmos.matrix = Matrix4x4.TRS(center, rotation, Vector3.one);
-
-            // 绘制平面表面
-            Gizmos.color = faceColor;
-            Gizmos.DrawCube(Vector3.zero, new Vector3(size.x, 0, size.y));
+            Gizmos.matrix = Matrix4x4.TRS(m_center, m_rot, Vector3.one);
+            Gizmos.color = m_objColor;
+            int count = m_obsCenters.Count;
+            for (int i = 0; i < count; i++)
+            {
+                Gizmos.DrawCube(m_obsCenters[i], m_gridSize);
+            }
         }
 
         private Quaternion GetPlaneRotation()
         {
             // 确保法线向量有效
-            if (normal.sqrMagnitude < 0.0001f)
+            if (m_normal.sqrMagnitude < 0.0001f)
             {
-                normal = Vector3.up;
+                m_normal = Vector3.up;
             }
 
             // 默认朝向上方
             Vector3 upDirection = Vector3.up;
-            Vector3 planeNormal = normal.normalized;
+            Vector3 planeNormal = m_normal.normalized;
 
             // 避免与默认方向相同导致计算出错
             if (Mathf.Abs(Vector3.Dot(planeNormal, upDirection)) > 0.9999f)

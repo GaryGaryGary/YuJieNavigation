@@ -9,20 +9,39 @@ namespace YuJie.Navigation.Editors
     [ExecuteInEditMode]
     public class GridGizmoDrawer : MonoBehaviour
     {
-        [Header("网格设置")]
-        public Vector3 position = Vector3.zero;
-        [Tooltip("平面尺寸 (宽度, 高度)")]
-        public Vector2 size = new Vector2(5, 5);
-        [Tooltip("网格细分数量 (X, Y)")]
-        public Vector2Int gridDivisions = new Vector2Int(5, 5);
+        private Vector2Int m_gridDivisions = new Vector2Int(5, 5);
 
-        private Color gridColor = new Color(0f, 0f, 0f, 0.3f);
-        private bool alwaysVisible = true;
-        private Vector3 normal = Vector3.up;
+        private Color m_gridColor = new Color(0f, 0f, 0f, 0.3f);
+        private bool m_alwaysVisible = true;
+        private Vector3 m_normal = Vector3.up;
+        private bool m_draw;
+        private Quaternion m_rot;
+        private Vector3 m_center;
+        private float m_halfWidth, m_halfHeight;
+
+        private void Awake()
+        {
+            m_rot = GetPlaneRotation();
+        }
+
+        public void SetGrid(Vector3 position, float width, float height, Vector2Int gridDivision)
+        {
+            m_gridDivisions = gridDivision;
+            m_center = position + transform.position;
+
+            m_halfWidth = width / 2f;
+            m_halfHeight = height / 2f;
+            m_draw = true;
+        }
+
+        public void Clear()
+        {
+            m_draw = false;
+        }
 
         private void OnDrawGizmos()
         {
-            if (alwaysVisible)
+            if (m_alwaysVisible)
             {
                 DrawGrid();
             }
@@ -30,7 +49,7 @@ namespace YuJie.Navigation.Editors
 
         private void OnDrawGizmosSelected()
         {
-            if (!alwaysVisible)
+            if (!m_alwaysVisible)
             {
                 DrawGrid();
             }
@@ -38,32 +57,29 @@ namespace YuJie.Navigation.Editors
 
         private void DrawGrid()
         {
-            // 计算坐标系
-            Quaternion rotation = GetPlaneRotation();
-            Vector3 center = transform.position + position;
+            if (!m_draw)
+                return;
 
-            // 设置平面坐标系
-            Gizmos.matrix = Matrix4x4.TRS(center, rotation, Vector3.one);
+            Gizmos.matrix = Matrix4x4.TRS(m_center, m_rot, Vector3.one);
 
-            // 绘制网格
-            if (gridDivisions.x > 0 && gridDivisions.y > 0)
+            if (m_gridDivisions.x > 0 && m_gridDivisions.y > 0)
             {
-                Gizmos.color = gridColor;
-                DrawGrid(size.x, size.y, gridDivisions.x, gridDivisions.y);
+                Gizmos.color = m_gridColor;
+                DrawGrid(m_gridDivisions.x, m_gridDivisions.y);
             }
         }
 
         private Quaternion GetPlaneRotation()
         {
             // 确保法线向量有效
-            if (normal.sqrMagnitude < 0.0001f)
+            if (m_normal.sqrMagnitude < 0.0001f)
             {
-                normal = Vector3.up;
+                m_normal = Vector3.up;
             }
 
             // 默认朝向上方
             Vector3 upDirection = Vector3.up;
-            Vector3 planeNormal = normal.normalized;
+            Vector3 planeNormal = m_normal.normalized;
 
             // 避免与默认方向相同导致计算出错
             if (Mathf.Abs(Vector3.Dot(planeNormal, upDirection)) > 0.9999f)
@@ -76,26 +92,23 @@ namespace YuJie.Navigation.Editors
             return Quaternion.LookRotation(Vector3.Cross(planeNormal, upDirection).normalized, planeNormal);
         }
 
-        private void DrawGrid(float width, float height, int divisionsX, int divisionsY)
+        private void DrawGrid(int divisionsX, int divisionsY)
         {
-            float halfWidth = width / 2f;
-            float halfHeight = height / 2f;
-
             // 横向网格线
             for (int i = 0; i <= divisionsX; i++)
             {
-                float x = Mathf.Lerp(-halfWidth, halfWidth, (float)i / divisionsX);
-                Vector3 start = new Vector3(x, 0, -halfHeight);
-                Vector3 end = new Vector3(x, 0, halfHeight);
+                float x = Mathf.Lerp(-m_halfWidth, m_halfWidth, (float)i / divisionsX);
+                Vector3 start = new Vector3(x, 0, -m_halfHeight);
+                Vector3 end = new Vector3(x, 0, m_halfHeight);
                 Gizmos.DrawLine(start, end);
             }
 
             // 纵向网格线
             for (int i = 0; i <= divisionsY; i++)
             {
-                float z = Mathf.Lerp(-halfHeight, halfHeight, (float)i / divisionsY);
-                Vector3 start = new Vector3(-halfWidth, 0, z);
-                Vector3 end = new Vector3(halfWidth, 0, z);
+                float z = Mathf.Lerp(-m_halfHeight, m_halfHeight, (float)i / divisionsY);
+                Vector3 start = new Vector3(-m_halfWidth, 0, z);
+                Vector3 end = new Vector3(m_halfWidth, 0, z);
                 Gizmos.DrawLine(start, end);
             }
         }

@@ -9,18 +9,43 @@ namespace YuJie.Navigation.Editors
     [ExecuteInEditMode]
     public class BorderGizmoDrawer : MonoBehaviour
     {
-        public Vector3 position = Vector3.zero;
-        [Tooltip("平面尺寸 (宽度, 高度)")]
-        public Vector2 size = new Vector2(5, 5);
+        private Color m_borderColor = new Color(0.1f, 0.5f, 0.2f, 1f);
+        private bool m_alwaysVisible = true;
+        private Vector3 m_normal = Vector3.up;
+        private Quaternion m_rot;
 
-        private bool alwaysVisible = true;
+        private Vector3 m_topLeft, m_topRight, m_bottomRight, m_bottomLeft;
 
-        private Vector3 normal = Vector3.up;
-        private Color borderColor = new Color(0.1f, 0.5f, 0.2f, 1f);
+        private bool m_draw;
+
+        private Vector3 m_center;
+
+        private void Awake()
+        {
+            m_rot = GetPlaneRotation();
+        }
+
+        public void SetBorder(Vector3 position, float width,float height)
+        {
+            m_center = position + transform.position;
+            float halfWidth = width / 2f;
+            float halfHeight = height / 2f;
+            m_topLeft = new Vector3(-halfWidth, 0, -halfHeight);
+            m_topRight = new Vector3(halfWidth, 0, -halfHeight);
+            m_bottomRight = new Vector3(halfWidth, 0, halfHeight);
+            m_bottomLeft = new Vector3(-halfWidth, 0, halfHeight);
+
+            m_draw = true;
+        }
+
+        public void Clear()
+        {
+            m_draw = false;
+        }
 
         private void OnDrawGizmos()
         {
-            if (alwaysVisible)
+            if (m_alwaysVisible)
             {
                 DrawPlane();
             }
@@ -28,7 +53,7 @@ namespace YuJie.Navigation.Editors
 
         private void OnDrawGizmosSelected()
         {
-            if (!alwaysVisible)
+            if (!m_alwaysVisible)
             {
                 DrawPlane();
             }
@@ -36,29 +61,24 @@ namespace YuJie.Navigation.Editors
 
         private void DrawPlane()
         {
-            // 计算坐标系
-            Quaternion rotation = GetPlaneRotation();
-            Vector3 center = transform.position + position;
-
-            // 设置平面坐标系
-            Gizmos.matrix = Matrix4x4.TRS(center, rotation, Vector3.one);
-
-            // 绘制平面边框
-            Gizmos.color = borderColor;
-            DrawPlaneBorder(size.x, size.y);
+            if (!m_draw)
+                return;
+            Gizmos.matrix = Matrix4x4.TRS(m_center, m_rot, Vector3.one);
+            Gizmos.color = m_borderColor;
+            DrawPlaneBorder();
         }
 
         private Quaternion GetPlaneRotation()
         {
             // 确保法线向量有效
-            if (normal.sqrMagnitude < 0.0001f)
+            if (m_normal.sqrMagnitude < 0.0001f)
             {
-                normal = Vector3.up;
+                m_normal = Vector3.up;
             }
 
             // 默认朝向上方
             Vector3 upDirection = Vector3.up;
-            Vector3 planeNormal = normal.normalized;
+            Vector3 planeNormal = m_normal.normalized;
 
             // 避免与默认方向相同导致计算出错
             if (Mathf.Abs(Vector3.Dot(planeNormal, upDirection)) > 0.9999f)
@@ -71,20 +91,12 @@ namespace YuJie.Navigation.Editors
             return Quaternion.LookRotation(Vector3.Cross(planeNormal, upDirection).normalized, planeNormal);
         }
 
-        private void DrawPlaneBorder(float width, float height)
+        private void DrawPlaneBorder()
         {
-            float halfWidth = width / 2f;
-            float halfHeight = height / 2f;
-
-            Vector3 topLeft = new Vector3(-halfWidth, 0, -halfHeight);
-            Vector3 topRight = new Vector3(halfWidth, 0, -halfHeight);
-            Vector3 bottomRight = new Vector3(halfWidth, 0, halfHeight);
-            Vector3 bottomLeft = new Vector3(-halfWidth, 0, halfHeight);
-
-            Gizmos.DrawLine(topLeft, topRight);
-            Gizmos.DrawLine(topRight, bottomRight);
-            Gizmos.DrawLine(bottomRight, bottomLeft);
-            Gizmos.DrawLine(bottomLeft, topLeft);
+            Gizmos.DrawLine(m_topLeft, m_topRight);
+            Gizmos.DrawLine(m_topRight, m_bottomRight);
+            Gizmos.DrawLine(m_bottomRight, m_bottomLeft);
+            Gizmos.DrawLine(m_bottomLeft, m_topLeft);
         }
 
     }
