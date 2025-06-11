@@ -1,9 +1,11 @@
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using UnityEditor;
 using UnityEditor.Experimental;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 using UnityEngine.UIElements;
 
 namespace YuJie.Navigation.Editors
@@ -37,6 +39,7 @@ namespace YuJie.Navigation.Editors
             m_mapRectField.value = new RectInt(-50, 50, 50, -50);
             m_mapRectField.OnValueChanged += OnMapRectChanged;
             root.Q<Button>("BtnGenerateMap").clicked += OnGenerateBtnClick;
+            root.Q<Button>("BtnSaveMap").clicked += OnSaveDataBtnClick;
         }
 
         private void LoadSettings()
@@ -45,9 +48,7 @@ namespace YuJie.Navigation.Editors
             m_obsLayer = m_setting.ObstacleLayer.value;
         }
 
-        #region 监听
-
-        //生成
+        #region 事件监听
         private void OnGenerateBtnClick()
         {
             bool succ = RefreshMapGrid(0.2f);
@@ -63,6 +64,35 @@ namespace YuJie.Navigation.Editors
             RefreshMapBorder();
         }
 
+        private void OnSaveDataBtnClick()
+        {
+            if (m_obsGrid == null || m_obsGrid.Length == 0)
+            {
+                Debug.LogWarning("障碍数据为空.");
+                return;
+            }
+            if(m_setting == null || string.IsNullOrEmpty(m_setting.SaveOrLoadPath))
+            {
+                Debug.LogWarning("保存路径为空.");
+                return;
+            }
+            string soName = $"{SceneManager.GetActiveScene().name}_ObsMap.asset";
+            try
+            {
+                var mapSo = ScriptableObject.CreateInstance<ObstacleMapData>();
+                AssetDatabase.CreateAsset(mapSo, Path.Combine(m_setting.SaveOrLoadPath, soName));
+                mapSo.SerializeMap(m_obsGrid);
+                EditorUtility.SetDirty(mapSo);
+                AssetDatabase.SaveAssets();
+                AssetDatabase.Refresh();
+                EditorUtility.DisplayDialog("", $"{soName}保存成功", "确认");
+            }
+            catch (Exception)
+            {
+                EditorUtility.DisplayDialog("", $"{soName}保存失败", "确认");
+                throw;
+            }
+        }
         #endregion 监听
 
         public void OnDestroy()
@@ -229,6 +259,7 @@ namespace YuJie.Navigation.Editors
             {
                 if (m_obsRects != null)
                     m_obsRects.Clear();
+                m_obsGrid = null;
                 return false;
             }
 
@@ -263,8 +294,8 @@ namespace YuJie.Navigation.Editors
             {
                 for (int y = 0; y < yDivisions; y++)
                 {
-                    checkRect.x += (gridW * x);
-                    checkRect.y += (gridW * y);
+                    checkRect.x = lbPos.x + gridW * x;
+                    checkRect.y = lbPos.y + gridW * y;
                     m_obsGrid[x, y] = CheckRectOverlap(checkRect);
                 }
             }
@@ -316,6 +347,11 @@ namespace YuJie.Navigation.Editors
                         m_maxY = Mathf.Max(m_maxY, newRect.yMax);
                     }
                 }
+            }
+
+            if (m_obsRects.Count == 0)
+            {
+                Debug.LogWarning("障碍物检测为空");
             }
         }
 
