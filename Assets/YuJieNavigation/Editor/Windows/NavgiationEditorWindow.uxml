@@ -1,6 +1,6 @@
 <ui:UXML xmlns:ui="UnityEngine.UIElements" xmlns:uie="UnityEditor.UIElements" xsi="http://www.w3.org/2001/XMLSchema-instance" engine="UnityEngine.UIElements" editor="UnityEditor.UIElements" noNamespaceSchemaLocation="../../../../UIElementsSchema/UIElements.xsd" editor-extension-mode="False">
     <Style src="project://database/Assets/YuJieNavigation/Editor/Windows/NavgiationEditorWindow.uss?fileID=7433441132597879392&amp;guid=065108340da3f9f4286c2390391c8b62&amp;type=3#NavgiationEditorWindow" />
-    <ui:IntegerField label="Grid Size" value="1" name="GridWidth" tabindex="0" usage-hints="None" style="width: 200px; align-items: stretch; justify-content: flex-start; align-self: flex-start; margin-top: 10px; font-size: 14px; word-spacing: 0; letter-spacing: 0; -unity-paragraph-spacing: 0; padding-top: 0; padding-right: 0; padding-bottom: 0; padding-left: 0; flex-shrink: 0; position: relative; flex-wrap: nowrap;" />
+    <ui:FloatField label="Grid Size" value="1" name="GridWidth" style="width: 200px; margin-top: 10px;" />
     <YuJie.Navigation.Editors.MapRectField name="MapRect" style="width: 250px; margin-top: 20px; font-size: 16px;" />
     <ui:Button text="生成导航数据" parse-escape-sequences="true" display-tooltip-when-elided="true" name="BtnGenerateMap" style="flex-direction: column-reverse; width: 200px; align-items: center; align-self: center; margin-top: 25px; font-size: 16px;" />
 </ui:UXML>

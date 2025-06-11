@@ -9,7 +9,6 @@ namespace YuJie.Navigation.Editors
 {
     /// <summary>
     /// TODO 
-    /// 改为float
     /// layermask
     /// </summary>
     public class NavgiationEditorWindow : EditorWindow
@@ -25,7 +24,7 @@ namespace YuJie.Navigation.Editors
             window.SetMapDrawer();
         }
 
-        private IntegerField m_gridWidthField;
+        private FloatField m_gridWidthField;
         private MapRectField m_mapRectField;
         private static LayerMask m_layerMask = (1 << LayerMask.NameToLayer("UI")) | 1 << LayerMask.NameToLayer("Water");
 
@@ -36,7 +35,7 @@ namespace YuJie.Navigation.Editors
             VisualElement labelFromUXML = m_VisualTreeAsset.Instantiate();
             root.Add(labelFromUXML);
 
-            m_gridWidthField = root.Q<IntegerField>("GridWidth");
+            m_gridWidthField = root.Q<FloatField>("GridWidth");
             m_mapRectField = root.Q<MapRectField>("MapRect");
             m_mapRectField.value = new RectInt(-50, 50, 50, -50);
             m_mapRectField.OnValueChanged += OnMapRectChanged;
@@ -72,6 +71,7 @@ namespace YuJie.Navigation.Editors
             if (m_planeDrawer != null)
                 GameObject.DestroyImmediate(m_planeDrawer.gameObject);
 
+            m_obsRects = null;
             ResetSceneView();
         }
 
@@ -79,7 +79,7 @@ namespace YuJie.Navigation.Editors
         private GridGizmoDrawer m_gridDrawer;
         private BorderGizmoDrawer m_borderDrawer;
         private PlaneGizmoDrawer m_planeDrawer;
-
+        private List<Rect> m_obsRects;
 
         private void SetMapDrawer()
         {
@@ -102,10 +102,9 @@ namespace YuJie.Navigation.Editors
         private void RefreshMapBorder()
         {
             RectInt rect = m_mapRectField.value;
-            float gridwidth = m_gridWidthField.value * 1.0f;
             //横竖网格数量
-            int xDivisions = (int)Mathf.Ceil((rect.y - rect.x) / gridwidth);
-            int yDivisions = (int)Mathf.Ceil((rect.width - rect.height) / gridwidth);
+            int xDivisions = Mathf.CeilToInt((rect.y - rect.x) / m_gridWidthField.value);
+            int yDivisions = Mathf.CeilToInt((rect.width - rect.height) / m_gridWidthField.value);
             m_borderDrawer.size = new Vector2(m_gridWidthField.value * xDivisions, m_gridWidthField.value * yDivisions);
             m_borderDrawer.position = new Vector3((rect.x + rect.y) / 2.0f, 2, (rect.width + rect.height) / 2.0f);
 
@@ -126,10 +125,9 @@ namespace YuJie.Navigation.Editors
             }
 
             RectInt rect = m_mapRectField.value;
-            float gridwidth = m_gridWidthField.value * 1.0f;
             //横竖网格数量
-            int xDivisions = (int)Mathf.Ceil((rect.y - rect.x) / gridwidth);
-            int yDivisions = (int)Mathf.Ceil((rect.width - rect.height) / gridwidth);
+            int xDivisions = Mathf.CeilToInt((rect.y - rect.x) / m_gridWidthField.value);
+            int yDivisions = Mathf.CeilToInt((rect.width - rect.height) / m_gridWidthField.value);
 
             m_gridDrawer.gridDivisions = new Vector2Int(xDivisions, yDivisions);
             m_gridDrawer.size = new Vector2(m_gridWidthField.value * xDivisions, m_gridWidthField.value * yDivisions);
@@ -144,8 +142,8 @@ namespace YuJie.Navigation.Editors
         /// </summary>
         private bool RefreshMapPlane()
         {
-            var bounds = FindObstacleRenderersInScene();
-            int obsCount = bounds.Count;
+            FindObstacleRenderersInScene();
+            int obsCount = m_obsRects.Count;
             int gridCount = 0;
             int checkCount = 0;
             for (int i = 0; i < gridCount; i++)
@@ -196,47 +194,31 @@ namespace YuJie.Navigation.Editors
         #endregion Scene视图设置
 
         /// <summary>
-        /// 获取所有Obstacle的BoundsCenter
+        /// 获取所有的Obstacle
         /// </summary>
-        private List<Vector3> FindObstacleRenderersInScene()
+        private void FindObstacleRenderersInScene()
         {
-            // 初始化结果列表
-            List<Vector3> obstacleBoundsCenter = new List<Vector3>();
-
-            // 获取所有带有"Obstacle"标签的游戏对象
-            GameObject[] obstacleObjects = GetAllGameObjectsInLayer(1);
+            GameObject[] obstacleObjects = GetAllGameObjectsInLayer();
+            m_obsRects = new List<Rect>(obstacleObjects.Length);
 
             foreach (GameObject obj in obstacleObjects)
             {
-                // 获取对象上所有Renderer组件
                 Renderer[] renderers = obj.GetComponentsInChildren<Renderer>();
-
                 if (renderers.Length == 0)
-                {
                     continue;
-                }
 
                 foreach (Renderer renderer in renderers)
                 {
-                    // 仅处理启用的Renderer
                     if (renderer.enabled)
                     {
-                        obstacleBoundsCenter.Add(renderer.bounds.center);
+                        m_obsRects.Add(new Rect(renderer.bounds.min.x,renderer.bounds.min.z,renderer.bounds.size.x, renderer.bounds.size.z));
                     }
                 }
             }
-            return obstacleBoundsCenter;
         }
 
-
-        private GameObject[] GetAllGameObjectsInLayer(int targetLayer)
+        private GameObject[] GetAllGameObjectsInLayer()
         {
-            if (targetLayer < 0 || targetLayer > 31)
-            {
-                Debug.LogError($"Invalid layer index: {targetLayer}. Must be between 0 and 31.");
-                return new GameObject[0];
-            }
-
             // 查找场景中的所有游戏对象
             GameObject[] allGameObjects = UnityEngine.Object.FindObjectsOfType<GameObject>(true);
 
