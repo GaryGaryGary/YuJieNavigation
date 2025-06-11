@@ -40,20 +40,12 @@ namespace YuJie.Navigation.Editors
             Quaternion rotation = GetPlaneRotation();
             Vector3 center = transform.position + position;
 
-            // 保存当前 Gizmos 状态
-            Color originalColor = Gizmos.color;
-            Matrix4x4 originalMatrix = Gizmos.matrix;
-
             // 设置平面坐标系
             Gizmos.matrix = Matrix4x4.TRS(center, rotation, Vector3.one);
 
             // 绘制平面边框
             Gizmos.color = borderColor;
             DrawPlaneBorder(size.x, size.y);
-
-            // 恢复 Gizmos 设置
-            Gizmos.color = originalColor;
-            Gizmos.matrix = originalMatrix;
         }
 
         private Quaternion GetPlaneRotation()
