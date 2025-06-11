@@ -2,15 +2,12 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEditor;
+using UnityEditor.Experimental;
 using UnityEngine;
 using UnityEngine.UIElements;
 
 namespace YuJie.Navigation.Editors
 {
-    /// <summary>
-    /// TODO 
-    /// layermask
-    /// </summary>
     public class NavgiationEditorWindow : EditorWindow
     {
         [SerializeField]
@@ -23,15 +20,15 @@ namespace YuJie.Navigation.Editors
             window.minSize = new Vector2(300, 350);
             window.SetMapDrawer();
         }
-
+        
         private FloatField m_gridWidthField;
         private MapRectField m_mapRectField;
-        private static LayerMask m_layerMask = (1 << LayerMask.NameToLayer("UI")) | 1 << LayerMask.NameToLayer("Water");
+        private NaviEditorSetting m_setting;
 
         public void CreateGUI()
         {
+            LoadSettings();
             VisualElement root = rootVisualElement;
-
             VisualElement labelFromUXML = m_VisualTreeAsset.Instantiate();
             root.Add(labelFromUXML);
 
@@ -40,6 +37,12 @@ namespace YuJie.Navigation.Editors
             m_mapRectField.value = new RectInt(-50, 50, 50, -50);
             m_mapRectField.OnValueChanged += OnMapRectChanged;
             root.Q<Button>("BtnGenerateMap").clicked += OnGenerateBtnClick;
+        }
+
+        private void LoadSettings()
+        {
+            m_setting = Resources.Load<NaviEditorSetting>("NaviEditorSetting");
+            m_obsLayer = m_setting.ObstacleLayer.value;
         }
 
         #region 监听
@@ -71,6 +74,7 @@ namespace YuJie.Navigation.Editors
             if (m_planeDrawer != null)
                 GameObject.DestroyImmediate(m_planeDrawer.gameObject);
 
+            m_setting = null;
             m_obsRects = null;
             ResetSceneView();
         }
@@ -217,6 +221,7 @@ namespace YuJie.Navigation.Editors
             }
         }
 
+        private int m_obsLayer;
         private GameObject[] GetAllGameObjectsInLayer()
         {
             // 查找场景中的所有游戏对象
@@ -225,7 +230,7 @@ namespace YuJie.Navigation.Editors
             // 使用 LINQ 过滤指定层的对象
             return allGameObjects
                 .Where(go => go.activeInHierarchy) // 只考虑活跃对象
-                .Where(go => (m_layerMask.value & (1 << go.layer)) != 0) // 指定层的对象
+                .Where(go => (m_obsLayer & (1 << go.layer)) != 0) // 指定层的对象
                 .Where(go => go.TryGetComponent<Renderer>(out _))//是渲染物
                 .ToArray();
         }

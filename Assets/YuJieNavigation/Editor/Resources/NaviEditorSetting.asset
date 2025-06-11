@@ -12,4 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 30420d455d4b6b94da41a2c9f8586e2c, type: 3}
   m_Name: NaviEditorSetting
   m_EditorClassIdentifier: 
-  "\u4FDD\u5B58\u52A0\u8F7D\u8DEF\u5F84": 
+  SaveOrLoadPath: Assets/NavData
+  ObstacleLayer:
+    serializedVersion: 2
+    m_Bits: 0

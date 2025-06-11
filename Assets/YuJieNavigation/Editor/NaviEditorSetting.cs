@@ -7,7 +7,7 @@ namespace YuJie.Navigation.Editors
     [CreateAssetMenu(fileName = "NaviEditorSetting", menuName = "YuJie/创建导航设置")]
     public class NaviEditorSetting : ScriptableObject
     {
-        public string 保存加载路径 = "";
-        
+        public string SaveOrLoadPath = "";
+        public LayerMask ObstacleLayer;
     }
 }
