@@ -10,6 +10,10 @@ using UnityEngine.UIElements;
 
 namespace YuJie.Navigation.Editors
 {
+    /// <summary>
+    /// TODO
+    /// 加载数据
+    /// </summary>
     public class NavgiationEditorWindow : EditorWindow
     {
         [SerializeField]
@@ -300,9 +304,9 @@ namespace YuJie.Navigation.Editors
                     bool isObs = CheckRectOverlap(checkRect);
                     m_obsGrid[x, y] = isObs;
                     if (isObs)
-                        m_obsNodes.Add(new Vector3(rect.center.x,0, rect.center.y));
+                        m_obsNodes.Add(new Vector3(checkRect.center.x,0, checkRect.center.y));
                     else
-                        m_walkableNodes.Add(new Vector3(rect.center.x, 0, rect.center.y));
+                        m_walkableNodes.Add(new Vector3(checkRect.center.x, 0, checkRect.center.y));
                 }
             }
         }
@@ -392,6 +396,10 @@ namespace YuJie.Navigation.Editors
 
             try
             {
+                RectInt rect = m_mapRectField.value;
+                var pos = new Vector3((rect.x + rect.y) / 2.0f, 1, (rect.width + rect.height) / 2.0f);
+                m_planeDrawer.SetObsData(m_obsNodes,pos, m_gridWidthField.value);
+                SceneView.lastActiveSceneView.Repaint();
 
             }
             catch (Exception)
