@@ -76,7 +76,7 @@ namespace YuJie.Navigation.Editors
                 Debug.LogWarning("障碍数据为空.");
                 return;
             }
-            if(m_setting == null || string.IsNullOrEmpty(m_setting.SaveOrLoadPath))
+            if (m_setting == null || string.IsNullOrEmpty(m_setting.SaveOrLoadPath))
             {
                 Debug.LogWarning("保存路径为空.");
                 return;
@@ -146,9 +146,7 @@ namespace YuJie.Navigation.Editors
             int yDivisions = Mathf.CeilToInt((rect.width - rect.height) / m_gridWidthField.value);
 
             var pos = new Vector3((rect.x + rect.y) / 2.0f, 2, (rect.width + rect.height) / 2.0f);
-            m_borderDrawer.SetBorder(pos,
-                m_gridWidthField.value * xDivisions,
-                m_gridWidthField.value * yDivisions);
+            m_borderDrawer.SetBorder(pos,m_gridWidthField.value * xDivisions, m_gridWidthField.value * yDivisions);
             SceneView.lastActiveSceneView.Repaint();
         }
 
@@ -175,7 +173,7 @@ namespace YuJie.Navigation.Editors
                 var size = new Vector2(m_gridWidthField.value * xDivisions, m_gridWidthField.value * yDivisions);
 
                 var pos = new Vector3((rect.x + rect.y) / 2.0f, 1, (rect.width + rect.height) / 2.0f);
-                m_gridDrawer.SetGrid(pos, size.x, size.y,div);
+                m_gridDrawer.SetGrid(pos,size.x, size.y, div);
                 SceneView.lastActiveSceneView.Repaint();
             }
             catch (Exception)
@@ -285,8 +283,8 @@ namespace YuJie.Navigation.Editors
             RectInt rect = m_mapRectField.value;
             int xDivisions = Mathf.CeilToInt((rect.y - rect.x) / gridW);
             int yDivisions = Mathf.CeilToInt((rect.width - rect.height) / gridW);
-            m_obsNodes = new List<Vector3>(xDivisions*yDivisions / 2);
-            m_walkableNodes = new List<Vector3>(xDivisions*yDivisions / 2);
+            m_obsNodes = new List<Vector3>(xDivisions * yDivisions / 2);
+            m_walkableNodes = new List<Vector3>(xDivisions * yDivisions / 2);
 
             Vector2 center = new Vector2((rect.x + rect.y) / 2.0f, (rect.width + rect.height) / 2.0f);
             m_obsGrid = new bool[xDivisions, yDivisions];
@@ -304,7 +302,7 @@ namespace YuJie.Navigation.Editors
                     bool isObs = CheckRectOverlap(checkRect);
                     m_obsGrid[x, y] = isObs;
                     if (isObs)
-                        m_obsNodes.Add(new Vector3(checkRect.center.x,0, checkRect.center.y));
+                        m_obsNodes.Add(new Vector3(checkRect.center.x, 0, checkRect.center.y));
                     else
                         m_walkableNodes.Add(new Vector3(checkRect.center.x, 0, checkRect.center.y));
                 }
@@ -398,7 +396,7 @@ namespace YuJie.Navigation.Editors
             {
                 RectInt rect = m_mapRectField.value;
                 var pos = new Vector3((rect.x + rect.y) / 2.0f, 1, (rect.width + rect.height) / 2.0f);
-                m_planeDrawer.SetObsData(m_obsNodes,pos, m_gridWidthField.value);
+                m_planeDrawer.SetObsData(m_obsNodes, m_gridWidthField.value);
                 SceneView.lastActiveSceneView.Repaint();
 
             }
