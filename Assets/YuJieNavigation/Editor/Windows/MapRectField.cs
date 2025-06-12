@@ -24,6 +24,12 @@ namespace YuJie.Navigation.Editors
             }
         }
 
+        public void SetValueWithoutNotify(RectInt value)
+        {
+            m_Value = value;
+            UpdateFieldValues();
+        }
+
         public event System.Action<RectInt> OnValueChanged;
 
         public MapRectField()

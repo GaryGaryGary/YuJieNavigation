@@ -10,10 +10,6 @@ using UnityEngine.UIElements;
 
 namespace YuJie.Navigation.Editors
 {
-    /// <summary>
-    /// TODO
-    /// 加载数据
-    /// </summary>
     public class NavgiationEditorWindow : EditorWindow
     {
         [SerializeField]
@@ -25,6 +21,7 @@ namespace YuJie.Navigation.Editors
             var window = GetWindow<NavgiationEditorWindow>("地图导航数据编辑");
             window.minSize = new Vector2(300, 350);
             window.SetMapDrawer();
+            window.LoadCurMapData();
         }
 
         private FloatField m_gridWidthField;
@@ -86,7 +83,7 @@ namespace YuJie.Navigation.Editors
             {
                 var mapSo = ScriptableObject.CreateInstance<ObstacleMapData>();
                 AssetDatabase.CreateAsset(mapSo, Path.Combine(m_setting.SaveOrLoadPath, soName));
-                mapSo.SerializeMap(m_obsGrid);
+                mapSo.SerializeMap(m_obsGrid, m_centerPos, m_gridwidth);
                 EditorUtility.SetDirty(mapSo);
                 AssetDatabase.SaveAssets();
                 AssetDatabase.Refresh();
@@ -145,7 +142,7 @@ namespace YuJie.Navigation.Editors
             int xDivisions = Mathf.CeilToInt((rect.y - rect.x) / m_gridWidthField.value);
             int yDivisions = Mathf.CeilToInt((rect.width - rect.height) / m_gridWidthField.value);
 
-            var pos = new Vector3((rect.x + rect.y) / 2.0f, 2, (rect.width + rect.height) / 2.0f);
+            var pos = new Vector3((rect.x + rect.y) / 2.0f, 5, (rect.width + rect.height) / 2.0f);
             m_borderDrawer.SetBorder(pos,m_gridWidthField.value * xDivisions, m_gridWidthField.value * yDivisions);
             SceneView.lastActiveSceneView.Repaint();
         }
@@ -172,7 +169,7 @@ namespace YuJie.Navigation.Editors
                 var div = new Vector2Int(xDivisions, yDivisions);
                 var size = new Vector2(m_gridWidthField.value * xDivisions, m_gridWidthField.value * yDivisions);
 
-                var pos = new Vector3((rect.x + rect.y) / 2.0f, 1, (rect.width + rect.height) / 2.0f);
+                var pos = new Vector3((rect.x + rect.y) / 2.0f, 4, (rect.width + rect.height) / 2.0f);
                 m_gridDrawer.SetGrid(pos,size.x, size.y, div);
                 SceneView.lastActiveSceneView.Repaint();
             }
@@ -302,7 +299,7 @@ namespace YuJie.Navigation.Editors
                     bool isObs = CheckRectOverlap(checkRect);
                     m_obsGrid[x, y] = isObs;
                     if (isObs)
-                        m_obsNodes.Add(new Vector3(checkRect.center.x, 0, checkRect.center.y));
+                        m_obsNodes.Add(new Vector3(checkRect.center.x, 6, checkRect.center.y));
                     else
                         m_walkableNodes.Add(new Vector3(checkRect.center.x, 0, checkRect.center.y));
                 }
@@ -378,6 +375,8 @@ namespace YuJie.Navigation.Editors
 
 
         #region 网格障碍显示
+        private Vector2 m_centerPos;
+        private float m_gridwidth;
 
         /// <summary>
         /// 更新地图网格面
@@ -395,10 +394,10 @@ namespace YuJie.Navigation.Editors
             try
             {
                 RectInt rect = m_mapRectField.value;
-                var pos = new Vector3((rect.x + rect.y) / 2.0f, 1, (rect.width + rect.height) / 2.0f);
+                m_gridwidth = m_gridWidthField.value;
+                m_centerPos = new Vector2((rect.x + rect.y) / 2.0f, (rect.width + rect.height) / 2.0f);
                 m_planeDrawer.SetObsData(m_obsNodes, m_gridWidthField.value);
                 SceneView.lastActiveSceneView.Repaint();
-
             }
             catch (Exception)
             {
@@ -412,5 +411,59 @@ namespace YuJie.Navigation.Editors
         }
 
         #endregion 网格障碍显示
+
+        private void LoadCurMapData()
+        {
+            if (m_setting == null)
+                return;
+            string soName = $"{SceneManager.GetActiveScene().name}_ObsMap.asset";
+            var mapdata = AssetDatabase.LoadAssetAtPath<ObstacleMapData>(Path.Combine(m_setting.SaveOrLoadPath, soName));
+            m_gridWidthField.value = mapdata.GridWidth;
+            m_mapRectField.SetValueWithoutNotify(mapdata.GetMapRect());
+            if (m_gridWidthField.value <= 0)
+                return;
+            m_centerPos = mapdata.Center;
+            m_gridwidth = mapdata.GridWidth;
+            Preview(mapdata);
+        }
+
+        private void Preview(ObstacleMapData data )
+        {
+            int xDivisions = data.xDivisions;
+            int yDivisions = data.yDivisions;
+            m_obsNodes = new List<Vector3>(xDivisions * yDivisions / 2);
+            var center = data.Center;
+
+            //左下角世界坐标
+            Vector2 lbPos = new Vector2(center.x - xDivisions * m_gridwidth / 2, center.y - yDivisions * m_gridwidth / 2);
+            Rect checkRect = new Rect(lbPos.x, lbPos.y, m_gridwidth, m_gridwidth);
+
+            var list = data.DeserializeMap();
+            int rows = list.GetLength(0);
+            int cols = list.GetLength(1);
+            for (int x = 0; x < rows; x++)
+            {
+                for (int y = 0; y < cols; y++)
+                {
+                    if (list[x,y] == true)
+                    {//障碍
+                        checkRect.x = lbPos.x + m_gridwidth * x;
+                        checkRect.y = lbPos.y + m_gridwidth * y;
+                        m_obsNodes.Add(new Vector3(checkRect.center.x, 6, checkRect.center.y));
+                    }
+                }
+            }
+
+            //边框
+            m_borderDrawer.SetBorder(new Vector3(center.x, 5, center.y), m_gridwidth * xDivisions, m_gridwidth * yDivisions);
+            //网格
+            m_gridDrawer.SetGrid(new Vector3(center.x, 4, center.y),
+                m_gridWidthField.value * xDivisions,
+                m_gridWidthField.value * yDivisions,
+                new Vector2Int(xDivisions, yDivisions));
+            //障碍物
+            m_planeDrawer.SetObsData(m_obsNodes, m_gridwidth);
+            SceneView.lastActiveSceneView.Repaint();
+        }
     }
 }
