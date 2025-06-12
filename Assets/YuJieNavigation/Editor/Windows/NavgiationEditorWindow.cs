@@ -418,6 +418,8 @@ namespace YuJie.Navigation.Editors
                 return;
             string soName = $"{SceneManager.GetActiveScene().name}_ObsMap.asset";
             var mapdata = AssetDatabase.LoadAssetAtPath<ObstacleMapData>(Path.Combine(m_setting.SaveOrLoadPath, soName));
+            if (mapdata == null)
+                return;
             m_gridWidthField.value = mapdata.GridWidth;
             m_mapRectField.SetValueWithoutNotify(mapdata.GetMapRect());
             if (m_gridWidthField.value <= 0)
