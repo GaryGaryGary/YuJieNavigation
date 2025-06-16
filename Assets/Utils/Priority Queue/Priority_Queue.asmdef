@@ -1,9 +1,7 @@
 {
-    "name": "YuJie.Navigation",
-    "rootNamespace": "YuJie.Navigation",
-    "references": [
-        "GUID:f6357695fd384d24dbb419d2c7f33bd8"
-    ],
+    "name": "Priority_Queue",
+    "rootNamespace": "",
+    "references": [],
     "includePlatforms": [],
     "excludePlatforms": [],
     "allowUnsafeCode": false,
