@@ -19,7 +19,7 @@ namespace YuJie.Navigation
         public Int2 StartP => m_startP.Value;
         public Int2 TargetP => m_targetP.Value;
 
-        private bool m_isObsChanged = true;
+        private bool m_isObstChanged = true;
         private Int2? m_startP = null;
         private Int2? m_targetP = null;
 
@@ -81,11 +81,11 @@ namespace YuJie.Navigation
         /// </summary>
         public bool StepAll(int stepCount = int.MaxValue)
         {
-            if(m_isObsChanged)
+            if(m_isObstChanged)
             {
                 m_baker.Init(m_obst);
                 m_jpsPlus.Init(m_baker.Bake());
-                m_isObsChanged = false;
+                m_isObstChanged = false;
             }
             _ = m_jpsPlus.SetStart(m_startP.Value);
             _ = m_jpsPlus.SetTarget(m_targetP.Value);
@@ -99,7 +99,7 @@ namespace YuJie.Navigation
                 return;
             }
             m_obst[p.X, p.Y] = isObst;
-            m_isObsChanged = true;
+            m_isObstChanged = true;
         }
 
         public bool[,] GetObst()

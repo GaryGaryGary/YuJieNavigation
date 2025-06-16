@@ -46,7 +46,7 @@ namespace YuJie.Navigation.Editors
         private void LoadSettings()
         {
             m_setting = Resources.Load<NaviEditorSetting>("NaviEditorSetting");
-            m_obsLayer = m_setting.ObstacleLayer.value;
+            m_obstLayer = m_setting.ObstacleLayer.value;
         }
 
         #region 事件监听
@@ -68,7 +68,7 @@ namespace YuJie.Navigation.Editors
 
         private void OnSaveDataBtnClick()
         {
-            if (m_obsGrid == null || m_obsGrid.Length == 0)
+            if (m_obstGrid == null || m_obstGrid.Length == 0)
             {
                 Debug.LogWarning("障碍数据为空.");
                 return;
@@ -78,12 +78,12 @@ namespace YuJie.Navigation.Editors
                 Debug.LogWarning("保存路径为空.");
                 return;
             }
-            string soName = $"{SceneManager.GetActiveScene().name}_ObsMap.asset";
+            string soName = $"{SceneManager.GetActiveScene().name}_ObstMap.asset";
             try
             {
                 var mapSo = ScriptableObject.CreateInstance<ObstacleMapData>();
                 AssetDatabase.CreateAsset(mapSo, Path.Combine(m_setting.SaveOrLoadPath, soName));
-                mapSo.SerializeMap(m_obsGrid, m_centerPos, m_gridwidth);
+                mapSo.SerializeMap(m_obstGrid, m_centerPos, m_gridwidth);
                 EditorUtility.SetDirty(mapSo);
                 AssetDatabase.SaveAssets();
                 AssetDatabase.Refresh();
@@ -106,9 +106,9 @@ namespace YuJie.Navigation.Editors
             if (m_planeDrawer != null)
                 GameObject.DestroyImmediate(m_planeDrawer.gameObject);
 
-            m_obsGrid = null;
+            m_obstGrid = null;
             m_setting = null;
-            m_obsRects = null;
+            m_obstRects = null;
             ResetSceneView();
         }
 
@@ -216,18 +216,18 @@ namespace YuJie.Navigation.Editors
         #endregion Scene视图设置
 
         #region 网格数据处理
-        private List<Rect> m_obsRects;
+        private List<Rect> m_obstRects;
 
         /// <summary>
         /// 网格数据
         /// true为障碍物
         /// </summary>
-        private bool[,] m_obsGrid;
+        private bool[,] m_obstGrid;
 
         /// <summary>
         /// 障碍物网格
         /// </summary>
-        private List<Vector3> m_obsNodes;
+        private List<Vector3> m_obstNodes;
 
         /// <summary>
         /// 可通行网格
@@ -247,44 +247,44 @@ namespace YuJie.Navigation.Editors
             bool cancelled = EditorUtility.DisplayCancelableProgressBar("地图导航数据生成....", $"网格数据更新中...", progress);
             if (cancelled)
             {
-                if (m_obsRects != null)
-                    m_obsRects.Clear();
-                m_obsGrid = null;
+                if (m_obstRects != null)
+                    m_obstRects.Clear();
+                m_obstGrid = null;
                 m_walkableNodes = null;
-                m_obsNodes = null;
+                m_obstNodes = null;
                 return false;
             }
 
             try
             {
                 FindObstacleRenderersInScene();
-                SetGridObsInfo();
+                SetGridObstInfo();
             }
             catch (Exception)
             {
-                if (m_obsRects != null)
-                    m_obsRects.Clear();
-                m_obsGrid = null;
+                if (m_obstRects != null)
+                    m_obstRects.Clear();
+                m_obstGrid = null;
                 m_walkableNodes = null;
-                m_obsNodes = null;
+                m_obstNodes = null;
                 EditorUtility.ClearProgressBar();
                 throw;
             }
             return true;
         }
 
-        private void SetGridObsInfo()
+        private void SetGridObstInfo()
         {
             float gridW = m_gridWidthField.value;
             //横竖网格数量
             RectInt rect = m_mapRectField.value;
             int xDivisions = Mathf.CeilToInt((rect.y - rect.x) / gridW);
             int yDivisions = Mathf.CeilToInt((rect.width - rect.height) / gridW);
-            m_obsNodes = new List<Vector3>(xDivisions * yDivisions / 2);
+            m_obstNodes = new List<Vector3>(xDivisions * yDivisions / 2);
             m_walkableNodes = new List<Vector3>(xDivisions * yDivisions / 2);
 
             Vector2 center = new Vector2((rect.x + rect.y) / 2.0f, (rect.width + rect.height) / 2.0f);
-            m_obsGrid = new bool[xDivisions, yDivisions];
+            m_obstGrid = new bool[xDivisions, yDivisions];
 
             //左下角世界坐标
             Vector2 lbPos = new Vector2(center.x - xDivisions * gridW / 2, center.y - yDivisions * gridW / 2);
@@ -296,10 +296,10 @@ namespace YuJie.Navigation.Editors
                 {
                     checkRect.x = lbPos.x + gridW * x;
                     checkRect.y = lbPos.y + gridW * y;
-                    bool isObs = CheckRectOverlap(checkRect);
-                    m_obsGrid[x, y] = isObs;
-                    if (isObs)
-                        m_obsNodes.Add(new Vector3(checkRect.center.x, 6, checkRect.center.y));
+                    bool isObst = CheckRectOverlap(checkRect);
+                    m_obstGrid[x, y] = isObst;
+                    if (isObst)
+                        m_obstNodes.Add(new Vector3(checkRect.center.x, 6, checkRect.center.y));
                     else
                         m_walkableNodes.Add(new Vector3(checkRect.center.x, 0, checkRect.center.y));
                 }
@@ -318,10 +318,10 @@ namespace YuJie.Navigation.Editors
             if (testRect.yMin >= m_maxY)
                 return false;
 
-            int count = m_obsRects.Count;
+            int count = m_obstRects.Count;
             for (int i = 0; i < count; i++)
             {
-                if (m_obsRects[i].Overlaps(testRect))
+                if (m_obstRects[i].Overlaps(testRect))
                     return true;
             }
             return false;
@@ -333,7 +333,7 @@ namespace YuJie.Navigation.Editors
             m_minX = m_minY = int.MaxValue;
             m_maxX = m_maxY = int.MinValue;
             GameObject[] obstacleObjects = GetAllGameObjectsInLayer();
-            m_obsRects = new List<Rect>(obstacleObjects.Length);
+            m_obstRects = new List<Rect>(obstacleObjects.Length);
             Renderer[] renderers;
             foreach (GameObject obj in obstacleObjects)
             {
@@ -345,7 +345,7 @@ namespace YuJie.Navigation.Editors
                     if (renderer.enabled)
                     {
                         var newRect = new Rect(renderer.bounds.min.x, renderer.bounds.min.z, renderer.bounds.size.x, renderer.bounds.size.z);
-                        m_obsRects.Add(newRect);
+                        m_obstRects.Add(newRect);
                         m_minX = Mathf.Min(m_minX, newRect.xMin);
                         m_minY = Mathf.Min(m_minY, newRect.yMin);
                         m_maxX = Mathf.Max(m_maxX, newRect.xMax);
@@ -354,20 +354,20 @@ namespace YuJie.Navigation.Editors
                 }
             }
 
-            if (m_obsRects.Count == 0)
+            if (m_obstRects.Count == 0)
             {
                 Debug.LogWarning("障碍物检测为空");
             }
         }
 
-        private int m_obsLayer;
+        private int m_obstLayer;
         private GameObject[] GetAllGameObjectsInLayer()
         {
             // 查找场景中的所有游戏对象
             GameObject[] allGameObjects = UnityEngine.Object.FindObjectsOfType<GameObject>(true);
             return allGameObjects
                 .Where(go => go.activeInHierarchy) // 只考虑活跃对象
-                .Where(go => (m_obsLayer & (1 << go.layer)) != 0) // 指定层的对象
+                .Where(go => (m_obstLayer & (1 << go.layer)) != 0) // 指定层的对象
                 .Where(go => go.TryGetComponent<Renderer>(out _))//是渲染物
                 .ToArray();
         }
@@ -396,7 +396,7 @@ namespace YuJie.Navigation.Editors
                 RectInt rect = m_mapRectField.value;
                 m_gridwidth = m_gridWidthField.value;
                 m_centerPos = new Vector2((rect.x + rect.y) / 2.0f, (rect.width + rect.height) / 2.0f);
-                m_planeDrawer.SetObsData(m_obsNodes, m_gridWidthField.value);
+                m_planeDrawer.SetObstData(m_obstNodes, m_gridWidthField.value);
                 SceneView.lastActiveSceneView.Repaint();
             }
             catch (Exception)
@@ -416,7 +416,7 @@ namespace YuJie.Navigation.Editors
         {
             if (m_setting == null)
                 return;
-            string soName = $"{SceneManager.GetActiveScene().name}_ObsMap.asset";
+            string soName = $"{SceneManager.GetActiveScene().name}_ObstMap.asset";
             var mapdata = AssetDatabase.LoadAssetAtPath<ObstacleMapData>(Path.Combine(m_setting.SaveOrLoadPath, soName));
             if (mapdata == null)
                 return;
@@ -433,7 +433,7 @@ namespace YuJie.Navigation.Editors
         {
             int xDivisions = data.xDivisions;
             int yDivisions = data.yDivisions;
-            m_obsNodes = new List<Vector3>(xDivisions * yDivisions / 2);
+            m_obstNodes = new List<Vector3>(xDivisions * yDivisions / 2);
             var center = data.Center;
 
             //左下角世界坐标
@@ -451,7 +451,7 @@ namespace YuJie.Navigation.Editors
                     {//障碍
                         checkRect.x = lbPos.x + m_gridwidth * x;
                         checkRect.y = lbPos.y + m_gridwidth * y;
-                        m_obsNodes.Add(new Vector3(checkRect.center.x, 6, checkRect.center.y));
+                        m_obstNodes.Add(new Vector3(checkRect.center.x, 6, checkRect.center.y));
                     }
                 }
             }
@@ -464,7 +464,7 @@ namespace YuJie.Navigation.Editors
                 m_gridWidthField.value * yDivisions,
                 new Vector2Int(xDivisions, yDivisions));
             //障碍物
-            m_planeDrawer.SetObsData(m_obsNodes, m_gridwidth);
+            m_planeDrawer.SetObstData(m_obstNodes, m_gridwidth);
             SceneView.lastActiveSceneView.Repaint();
         }
     }

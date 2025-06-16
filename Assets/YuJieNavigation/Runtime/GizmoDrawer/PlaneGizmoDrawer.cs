@@ -12,8 +12,8 @@ namespace YuJie.Navigation.Editors
     {
         private Color m_objColor = new Color(1f, 0f, 0f, 0.5f);
         private bool m_alwaysVisible = true;
-        private bool m_drawObsPlane, m_drawWalkablesPlane;
-        private List<Vector3> m_obsCenters;
+        private bool m_drawObstPlane;
+        private List<Vector3> m_obstCenters;
 
         private Vector3 m_gridSize = Vector3.one;
 
@@ -21,26 +21,26 @@ namespace YuJie.Navigation.Editors
         {
         }
 
-        public void SetObsData(List<Vector3> vectors, float width)
+        public void SetObstData(List<Vector3> vectors, float width)
         {
             if (vectors == null)
                 return;
             m_gridSize = new Vector3(width, 0, width);
-            m_obsCenters = vectors;
-            m_drawObsPlane = true;
+            m_obstCenters = vectors;
+            m_drawObstPlane = true;
         }
 
         public void Clear()
         {
-            m_obsCenters = null;
-            m_drawObsPlane = m_drawWalkablesPlane = false;
+            m_obstCenters = null;
+            m_drawObstPlane = false;
         }
 
         private void OnDrawGizmos()
         {
             if (m_alwaysVisible)
             {
-                DrawObsPlane();
+                DrawObstPlane();
             }
         }
 
@@ -48,19 +48,19 @@ namespace YuJie.Navigation.Editors
         {
             if (!m_alwaysVisible)
             {
-                DrawObsPlane();
+                DrawObstPlane();
             }
         }
 
-        private void DrawObsPlane()
+        private void DrawObstPlane()
         {
-            if (!m_drawObsPlane)
+            if (!m_drawObstPlane)
                 return;
             Gizmos.color = m_objColor;
-            int count = m_obsCenters.Count;
+            int count = m_obstCenters.Count;
             for (int i = 0; i < count; i++)
             {
-                Gizmos.DrawCube(m_obsCenters[i], m_gridSize);
+                Gizmos.DrawCube(m_obstCenters[i], m_gridSize);
             }
         }
 

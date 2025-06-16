@@ -17,15 +17,15 @@ namespace YuJie.Navigation
 
         public JPSPlusMapBaker() { }
 
-        public JPSPlusMapBaker(bool[,] obs)
+        public JPSPlusMapBaker(bool[,] obst)
         {
-            Init(obs);
+            Init(obst);
         }
 
-        public void Init(bool[,] obs)
+        public void Init(bool[,] obst)
         {
-            Width = obs.GetLength(0);
-            Height = obs.GetLength(1);
+            Width = obst.GetLength(0);
+            Height = obst.GetLength(1);
             BlockLUT = new int[Width, Height];
 
             List<JPSPlusMapBakerBlock> blocks = new List<JPSPlusMapBakerBlock>();
@@ -34,7 +34,7 @@ namespace YuJie.Navigation
             {
                 for (int y = 0; y < Height; y++)
                 {
-                    if (obs[x, y])
+                    if (obst[x, y])
                     {//障碍
                         BlockLUT[x, y] = -1;
                     }
