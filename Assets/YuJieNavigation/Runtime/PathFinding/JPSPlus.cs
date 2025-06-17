@@ -17,8 +17,8 @@ namespace YuJie.Navigation
         private readonly HashSet<JPSPlusNode> m_closeList = new HashSet<JPSPlusNode>();
         private JPSPlusBakedMap m_bakedMap;
 
-        public int Width => m_bakedMap.Width;
-        public int Height => m_bakedMap.Height;
+        public int Width => m_bakedMap.xDivisions;
+        public int Height => m_bakedMap.yDivisions;
 
         public JPSPlus() { }
 
@@ -32,9 +32,10 @@ namespace YuJie.Navigation
             m_openList.Clear();
             m_closeList.Clear();
 
+            var lut = m_bakedMap.GetBlockLUT();
             foreach (JPSPlusNode node in m_createdNodes.Values.ToList())
             {
-                int index = m_bakedMap.BlockLUT[node.Position.X, node.Position.Y];
+                int index = lut[node.Position.X, node.Position.Y];
                 if(index < 0)
                 {//障碍
                     _ = m_createdNodes.Remove(node.Position);
@@ -186,7 +187,8 @@ namespace YuJie.Navigation
 
         public JPSPlusNode GetJPSPlusNode(in Int2 p)
         {
-            return new JPSPlusNode(p, m_bakedMap.Blocks[m_bakedMap.BlockLUT[p.X,p.Y]].JumpDistances);
+            var lut = m_bakedMap.GetBlockLUT();
+            return new JPSPlusNode(p, m_bakedMap.Blocks[lut[p.X,p.Y]].JumpDistances);
         }
 
         private JPSPlusNode GetOrCreatedNode(in Int2 p)

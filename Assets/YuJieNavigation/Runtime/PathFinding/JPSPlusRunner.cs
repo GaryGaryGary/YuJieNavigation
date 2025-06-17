@@ -10,7 +10,7 @@ namespace YuJie.Navigation
     public class JPSPlusRunner
     {
         private readonly JPSPlus m_jpsPlus = new JPSPlus();
-        private readonly JPSPlusMapBaker m_baker = new JPSPlusMapBaker();
+        //private readonly JPSPlusMapBaker m_baker = new JPSPlusMapBaker();
         private bool[,] m_obst = null;
 
         public int Width { get; private set; }
@@ -19,14 +19,14 @@ namespace YuJie.Navigation
         public Int2 StartP => m_startP.Value;
         public Int2 TargetP => m_targetP.Value;
 
-        private bool m_isObstChanged = true;
+        //private bool m_isObstChanged = true;
         private Int2? m_startP = null;
         private Int2? m_targetP = null;
 
-        public JPSPlusRunner(int width, int height)
-        {
-            Init(new bool[width, height]);
-        }
+        //public JPSPlusRunner(int width, int height)
+        //{
+        //    Init(new bool[width, height]);
+        //}
 
         public JPSPlusRunner(bool[,] obst)
         {
@@ -81,26 +81,26 @@ namespace YuJie.Navigation
         /// </summary>
         public bool StepAll(int stepCount = int.MaxValue)
         {
-            if(m_isObstChanged)
-            {
-                m_baker.Init(m_obst);
-                m_jpsPlus.Init(m_baker.Bake());
-                m_isObstChanged = false;
-            }
+            //if(m_isObstChanged)
+            //{
+            //    m_baker.Init(m_obst);
+            //    m_jpsPlus.Init(m_baker.Bake());
+            //    m_isObstChanged = false;
+            //}
             _ = m_jpsPlus.SetStart(m_startP.Value);
             _ = m_jpsPlus.SetTarget(m_targetP.Value);
             return m_jpsPlus.StepAll(stepCount);
         }
 
-        public void SetObst(in Int2 p, bool isObst)
-        {
-            if (!IsInMapBoundary(p))
-            {
-                return;
-            }
-            m_obst[p.X, p.Y] = isObst;
-            m_isObstChanged = true;
-        }
+        //public void SetObst(in Int2 p, bool isObst)
+        //{
+        //    if (!IsInMapBoundary(p))
+        //    {
+        //        return;
+        //    }
+        //    m_obst[p.X, p.Y] = isObst;
+        //    m_isObstChanged = true;
+        //}
 
         public bool[,] GetObst()
         {

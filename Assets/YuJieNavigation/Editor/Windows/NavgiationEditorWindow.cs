@@ -78,12 +78,12 @@ namespace YuJie.Navigation.Editors
                 Debug.LogWarning("保存路径为空.");
                 return;
             }
-            string soName = $"{SceneManager.GetActiveScene().name}_ObstMap.asset";
+            string soName = $"{SceneManager.GetActiveScene().name}_BakedMap.asset";
             try
             {
-                var mapSo = ScriptableObject.CreateInstance<ObstacleMapData>();
+                var mapSo = ScriptableObject.CreateInstance<JPSPlusBakedMap>();
                 AssetDatabase.CreateAsset(mapSo, Path.Combine(m_setting.SaveOrLoadPath, soName));
-                mapSo.SerializeMap(m_obstGrid, m_centerPos, m_gridwidth);
+                mapSo.Bake(m_obstGrid, m_centerPos, m_gridwidth);
                 EditorUtility.SetDirty(mapSo);
                 AssetDatabase.SaveAssets();
                 AssetDatabase.Refresh();
@@ -416,8 +416,8 @@ namespace YuJie.Navigation.Editors
         {
             if (m_setting == null)
                 return;
-            string soName = $"{SceneManager.GetActiveScene().name}_ObstMap.asset";
-            var mapdata = AssetDatabase.LoadAssetAtPath<ObstacleMapData>(Path.Combine(m_setting.SaveOrLoadPath, soName));
+            string soName = $"{SceneManager.GetActiveScene().name}_BakedMap.asset";
+            var mapdata = AssetDatabase.LoadAssetAtPath<JPSPlusBakedMap>(Path.Combine(m_setting.SaveOrLoadPath, soName));
             if (mapdata == null)
                 return;
             m_gridWidthField.value = mapdata.GridWidth;
@@ -429,7 +429,7 @@ namespace YuJie.Navigation.Editors
             Preview(mapdata);
         }
 
-        private void Preview(ObstacleMapData data )
+        private void Preview(JPSPlusBakedMap data )
         {
             int xDivisions = data.xDivisions;
             int yDivisions = data.yDivisions;

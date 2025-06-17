@@ -7,7 +7,7 @@ using UnityEngine;
 
 namespace YuJie.Navigation
 {
-    public class JPSPlusMapBaker
+    internal class JPSPlusMapBaker
     {
         public int Width { private set; get; }
         public int Height { private set; get; }
@@ -49,12 +49,12 @@ namespace YuJie.Navigation
             Blocks = blocks.ToArray();
         }
 
-        public JPSPlusBakedMap Bake()
+        public (int[,] blockLUT, JPSPlusBakedMap.JPSPlusBakedMapBlock[] blocks) Bake()
         {
             MarkJumpDirFlag();
             MarkStraight();
             MarkDiagonal();
-            return new JPSPlusBakedMap(
+            return (
                 BlockLUT,
                 Blocks.Select(b =>
                 {

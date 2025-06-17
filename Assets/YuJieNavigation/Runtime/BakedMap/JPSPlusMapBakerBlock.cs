@@ -4,7 +4,7 @@ using UnityEngine;
 
 namespace YuJie.Navigation
 {
-    public class JPSPlusMapBakerBlock
+    internal class JPSPlusMapBakerBlock
     {
         public readonly int[] JumpDistances = new int[8];
         public readonly Int2 Pos;
