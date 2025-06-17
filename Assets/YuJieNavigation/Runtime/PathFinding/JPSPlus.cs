@@ -188,7 +188,8 @@ namespace YuJie.Navigation
         public JPSPlusNode GetJPSPlusNode(in Int2 p)
         {
             var lut = m_bakedMap.GetBlockLUT();
-            return new JPSPlusNode(p, m_bakedMap.Blocks[lut[p.X,p.Y]].JumpDistances);
+            Vector3 worldv3 = new Vector3(m_bakedMap.OriginPos.x + p.X * m_bakedMap.GridWidth,0, m_bakedMap.OriginPos.y + p.Y * m_bakedMap.GridWidth);
+            return new JPSPlusNode(p, worldv3, m_bakedMap.Blocks[lut[p.X,p.Y]].JumpDistances);
         }
 
         private JPSPlusNode GetOrCreatedNode(in Int2 p)

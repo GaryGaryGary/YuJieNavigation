@@ -8,6 +8,8 @@ namespace YuJie.Navigation
     {
         public Int2 Position { get; private set; }
 
+        public UnityEngine.Vector3 WorldPos { get; private set; }
+
         /// <summary>
         /// 代价
         /// </summary>
@@ -30,11 +32,12 @@ namespace YuJie.Navigation
         /// </summary>
         private int[] m_jumpDistances;
 
-        public JPSPlusNode(in Int2 p, int[] jumpDis)
+        public JPSPlusNode(in Int2 p,in UnityEngine.Vector3 worldpos, int[] jumpDis)
         {
             G = 0;
             H = 0;
             Position = p;
+            WorldPos = worldpos;
             m_jumpDistances = jumpDis;
         }
 

@@ -12,18 +12,19 @@ namespace YuJie.Navigation
         public int yDivisions => m_yDivisions;
         public Vector2 Center => m_center;
         public float GridWidth => m_gridWidth;
+        public Vector2 OriginPos => m_originPos;
 
-        //[SerializeField]
+        [SerializeField,HideInInspector]
         private JPSPlusBakedMapBlock[] m_blocks;
-        //[SerializeField]
+        [SerializeField,HideInInspector]
         private bool[] m_serializedBlockData;
         [SerializeField]
         private int m_xDivisions, m_yDivisions;
         [SerializeField]
-        private Vector2 m_center;
+        private Vector2 m_center, m_originPos;
         [SerializeField]
         private float m_gridWidth;
-        //[SerializeField]
+        [SerializeField,HideInInspector]
         private int[] m_LUTs;
 
 
@@ -32,13 +33,13 @@ namespace YuJie.Navigation
         /// </summary>
         private int[,] m_blockLUT;
 
-        public void Bake(bool[,] map, Vector2 center, float width)
+        public void Bake(bool[,] map, Vector2 center, float width,Vector2 originPos)
         {
             SerializeMap(map,center,width);
             JPSPlusMapBaker jpspBaker = new JPSPlusMapBaker(map);
             var result = jpspBaker.Bake();
             this.m_blocks = result.blocks;
-
+            this.m_originPos = originPos;
             this.m_blockLUT = result.blockLUT;
 
             m_LUTs = new int[m_xDivisions * m_yDivisions];

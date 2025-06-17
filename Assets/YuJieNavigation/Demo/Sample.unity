@@ -166,7 +166,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: e1f0f0dd384fef740bab6328d6e00ed0, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  m_start: {fileID: 1113356749}
+  m_btnStart: {fileID: 1113356749}
   m_bakedMap: {fileID: 11400000, guid: 824f4387514c51f488b7288231ae8bf1, type: 2}
 --- !u!1 &140748245
 GameObject:
@@ -726,7 +726,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   m_Material: {fileID: 0}
-  m_Color: {r: 1, g: 0, b: 0, a: 1}
+  m_Color: {r: 1, g: 0, b: 0.08701134, a: 1}
   m_RaycastTarget: 1
   m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
   m_Maskable: 1
@@ -746,7 +746,7 @@ MonoBehaviour:
     m_HorizontalOverflow: 0
     m_VerticalOverflow: 1
     m_LineSpacing: 1.2
-  m_Text: "\u5DE6\u952E\u8BBE\u7F6E\u8D77\u70B9\n\u53F3\u952E\u8BBE\u7F6E\u7EC8\u70B9"
+  m_Text: "\u5DE6\u952E\u8BBE\u7F6E\u8D77\u70B9\n<color=blue>\u53F3\u952E\u8BBE\u7F6E\u7EC8\u70B9</color>"
 --- !u!222 &635148612
 CanvasRenderer:
   m_ObjectHideFlags: 0

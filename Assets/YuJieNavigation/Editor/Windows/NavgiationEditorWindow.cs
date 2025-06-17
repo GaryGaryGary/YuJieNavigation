@@ -30,6 +30,8 @@ namespace YuJie.Navigation.Editors
 
         public void CreateGUI()
         {
+            EditorApplication.playModeStateChanged += OnPlayModeStateChanged;
+
             LoadSettings();
             VisualElement root = rootVisualElement;
             VisualElement labelFromUXML = m_VisualTreeAsset.Instantiate();
@@ -83,7 +85,7 @@ namespace YuJie.Navigation.Editors
             {
                 var mapSo = ScriptableObject.CreateInstance<JPSPlusBakedMap>();
                 AssetDatabase.CreateAsset(mapSo, Path.Combine(m_setting.SaveOrLoadPath, soName));
-                mapSo.Bake(m_obstGrid, m_centerPos, m_gridwidth);
+                mapSo.Bake(m_obstGrid, m_centerPos, m_gridwidth,m_originPos);
                 EditorUtility.SetDirty(mapSo);
                 AssetDatabase.SaveAssets();
                 AssetDatabase.Refresh();
@@ -226,6 +228,11 @@ namespace YuJie.Navigation.Editors
         private bool[,] m_obstGrid;
 
         /// <summary>
+        /// 左下角坐标
+        /// </summary>
+        private Vector2 m_originPos;
+
+        /// <summary>
         /// 障碍物网格
         /// </summary>
         private List<Vector3> m_obstNodes;
@@ -288,15 +295,15 @@ namespace YuJie.Navigation.Editors
             m_obstGrid = new bool[xDivisions, yDivisions];
 
             //左下角世界坐标
-            Vector2 lbPos = new Vector2(center.x - xDivisions * gridW / 2, center.y - yDivisions * gridW / 2);
-            Rect checkRect = new Rect(lbPos.x, lbPos.y, gridW, gridW);
+            m_originPos = new Vector2(center.x - xDivisions * gridW / 2, center.y - yDivisions * gridW / 2);
+            Rect checkRect = new Rect(m_originPos.x, m_originPos.y, gridW, gridW);
 
             for (int x = 0; x < xDivisions; x++)
             {
                 for (int y = 0; y < yDivisions; y++)
                 {
-                    checkRect.x = lbPos.x + gridW * x;
-                    checkRect.y = lbPos.y + gridW * y;
+                    checkRect.x = m_originPos.x + gridW * x;
+                    checkRect.y = m_originPos.y + gridW * y;
                     bool isObst = CheckRectOverlap(checkRect);
                     m_obstGrid[x, y] = isObst;
                     if (isObst)
@@ -468,5 +475,12 @@ namespace YuJie.Navigation.Editors
             m_planeDrawer.SetObstData(m_obstNodes, m_gridwidth);
             SceneView.lastActiveSceneView.Repaint();
         }
+
+        private void OnPlayModeStateChanged(PlayModeStateChange state)
+        {
+            EditorApplication.playModeStateChanged -= OnPlayModeStateChanged;
+            GetWindow<NavgiationEditorWindow>().Close();
+        }
+
     }
 }
