@@ -196,6 +196,7 @@ namespace YuJie.Navigation.Editors
             }
             sceneView.Focus();
 
+            sceneView.in2DMode = false;
             sceneView.rotation = Quaternion.Euler(90f, 0f, 0f);
             sceneView.LookAt(Vector3.zero);
             m_originalProj = sceneView.orthographic;

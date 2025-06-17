@@ -13,9 +13,9 @@ namespace YuJie.Navigation
         public Vector2 Center => m_center;
         public float GridWidth => m_gridWidth;
 
-        [SerializeField]
+        //[SerializeField]
         private JPSPlusBakedMapBlock[] m_blocks;
-        [SerializeField]
+        //[SerializeField]
         private bool[] m_serializedBlockData;
         [SerializeField]
         private int m_xDivisions, m_yDivisions;
@@ -23,10 +23,8 @@ namespace YuJie.Navigation
         private Vector2 m_center;
         [SerializeField]
         private float m_gridWidth;
-        [SerializeField]
+        //[SerializeField]
         private int[] m_LUTs;
-        [SerializeField]
-        private int m_lutX, m_lutY;
 
 
         /// <summary>
@@ -42,15 +40,13 @@ namespace YuJie.Navigation
             this.m_blocks = result.blocks;
 
             this.m_blockLUT = result.blockLUT;
-            this.m_lutX = m_blockLUT.GetLength(0);
-            this.m_lutY = m_blockLUT.GetLength(1);
 
-            m_LUTs = new int[m_lutX * m_lutY];
-            for (int x = 0; x < m_lutX; x++)
+            m_LUTs = new int[m_xDivisions * m_yDivisions];
+            for (int x = 0; x < m_xDivisions; x++)
             {
-                for (int y = 0; y < m_lutY; y++)
+                for (int y = 0; y < m_yDivisions; y++)
                 {
-                    m_LUTs[x * m_lutY + y] = this.m_blockLUT[x, y];
+                    m_LUTs[x * m_yDivisions + y] = this.m_blockLUT[x, y];
                 }
             }
         }
@@ -60,12 +56,12 @@ namespace YuJie.Navigation
         {
             if(m_blockLUT == null)
             {
-                m_blockLUT = new int[m_lutX, m_lutY];
-                for (int x = 0; x < m_lutX; x++)
+                m_blockLUT = new int[m_xDivisions, m_yDivisions];
+                for (int x = 0; x < m_xDivisions; x++)
                 {
-                    for (int y = 0; y < m_lutY; y++)
+                    for (int y = 0; y < m_yDivisions; y++)
                     {
-                        m_blockLUT[x, y] = m_LUTs[x * m_lutY + y];
+                        m_blockLUT[x, y] = m_LUTs[x * m_yDivisions + y];
                     }
                 }
             }
