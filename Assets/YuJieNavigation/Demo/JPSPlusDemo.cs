@@ -23,7 +23,7 @@ public class JPSPlusDemo : MonoBehaviour
         if (m_btnStart)
             m_btnStart.onClick.AddListener(OnBtnStartClickHandler);
 
-        if(m_start == null)
+        if (m_start == null)
         {
             m_start = GameObject.CreatePrimitive(PrimitiveType.Sphere);
             m_start.name = "start";
@@ -41,6 +41,20 @@ public class JPSPlusDemo : MonoBehaviour
             m_end.GetComponent<Renderer>().material = blueMaterial;
         }
         m_end.SetActive(false);
+    }
+
+    private void CreatePathPoint()
+    {
+        for (int i = 0; i < m_pathPoints.Count; i++)
+        {
+            var point = GameObject.CreatePrimitive(PrimitiveType.Sphere);
+            point.transform.localScale = new Vector3(0.5f, 0.5f, 0.5f);
+            point.transform.position = m_pathPoints[i].WorldPos;
+            point.name = "point" + i;
+            Material blueMaterial = new Material(Shader.Find("Unlit/Color"));
+            blueMaterial.color = Color.black;
+            point.GetComponent<Renderer>().material = blueMaterial;
+        }
     }
 
     private void Start()
@@ -72,14 +86,15 @@ public class JPSPlusDemo : MonoBehaviour
             return;
         }
         bool succ = m_runner.StepAll();
-        if(succ)
+        if (succ)
         {
             m_pathPoints = m_runner.GetPaths();
-            if(m_pathPoints.Count < 2)
+            if (m_pathPoints.Count < 2)
             {
                 Debug.LogWarning("路径点生成错误");
                 return;
             }
+            CreatePathPoint();
             Debug.Log("寻路成功");
             StartMove();
         }
@@ -94,7 +109,7 @@ public class JPSPlusDemo : MonoBehaviour
             return;
         }
 
-        m_start.SetActive (true);
+        m_start.SetActive(true);
     }
 
     private void SetEnd()
@@ -124,7 +139,7 @@ public class JPSPlusDemo : MonoBehaviour
             Move();
             return;
         }
-        if(Input.GetMouseButtonUp(0) && !IsPointerOverUI())
+        if (Input.GetMouseButtonUp(0) && !IsPointerOverUI())
         {
             SetStart();
         }
@@ -145,12 +160,11 @@ public class JPSPlusDemo : MonoBehaviour
     private IReadOnlyList<JPSPlusNode> m_pathPoints;
     private int m_pointIndex;
     private JPSPlusNode m_curNode;
-    [SerializeField]private float m_speed = 2;
+    [SerializeField] private float m_speed = 2;
 
     private void StartMove()
     {
-        //去除起点节点,从下一个点开始
-        m_pointIndex = 1;
+        PrunePointPath();
         m_curNode = m_pathPoints[m_pointIndex];
         m_inMove = true;
 
@@ -168,16 +182,38 @@ public class JPSPlusDemo : MonoBehaviour
         if (Math.Abs(dis) < float.Epsilon)
         {
             m_pointIndex++;
-            if(m_pointIndex >= m_pathPoints.Count)
+            if (m_pointIndex >= m_pathPoints.Count)
             {
                 EndMove();
                 return;
             }
+            PrunePointPath();
             m_curNode = m_pathPoints[m_pointIndex];
         }
         m_start.transform.position = Vector3.MoveTowards(m_start.transform.position,
                                                m_curNode.WorldPos,
                                                m_speed * Time.deltaTime);
     }
+
+    /// <summary>
+    /// 从最后一个位置查看可见性
+    /// </summary>
+    private void PrunePointPath()
+    {
+        int endIndex = 1;
+        bool cast = true;
+        while (cast)
+        {
+            if (endIndex == m_pathPoints.Count)
+                break;
+            if (m_pathPoints.Count - endIndex<= m_pointIndex)
+                break;
+            cast = Physics.Linecast(m_start.transform.position, m_pathPoints[^endIndex].WorldPos);
+            endIndex++;
+        }
+        if (!cast)
+            m_pointIndex = m_pathPoints.Count - endIndex;
+    }
+
     #endregion 移动
 }
